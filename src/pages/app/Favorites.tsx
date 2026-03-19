@@ -1,11 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { Search, Star, BookOpen, Wrench, ArrowRight } from "lucide-react";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Star, BookOpen, Wrench, ArrowRight } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  EmptyState,
+  FilterBar,
+  PageHeader,
+  PageShell,
+  SectionHeader,
+  StatCard,
+} from "@/components/ui/page";
 
 type FavoriteRow = {
   id: string;
@@ -75,7 +84,7 @@ export default function Favorites() {
       setLoading(false);
     }
 
-    load();
+    void load();
   }, [user]);
 
   const favoriteItems = useMemo<FavoriteItem[]>(() => {
@@ -143,36 +152,21 @@ export default function Favorites() {
   };
 
   return (
-    <div className="space-y-8">
-      <section className="rounded-3xl border border-slate-200 bg-white px-6 py-7 shadow-sm md:px-8">
-        <p className="text-sm font-medium text-slate-500">Favorites</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
-          Your saved resources
-        </h1>
-        <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-          Keep your most useful knowledge topics and toolkits close for faster reuse.
-        </p>
-
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-            <p className="text-xs uppercase tracking-wide text-slate-500">Total favorites</p>
-            <p className="mt-2 text-2xl font-semibold text-slate-900">{favoriteItems.length}</p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-            <p className="text-xs uppercase tracking-wide text-slate-500">Knowledge topics</p>
-            <p className="mt-2 text-2xl font-semibold text-slate-900">{knowledgeCount}</p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-            <p className="text-xs uppercase tracking-wide text-slate-500">Toolkits</p>
-            <p className="mt-2 text-2xl font-semibold text-slate-900">{toolkitCount}</p>
-          </div>
+    <PageShell>
+      <PageHeader
+        eyebrow="Favorites"
+        title="Your saved resources"
+        description="Keep your most useful knowledge topics and toolkits close so you can return to the right methods faster."
+      >
+        <div className="grid gap-4 md:grid-cols-3">
+          <StatCard label="Total favorites" value={favoriteItems.length} icon={Star} />
+          <StatCard label="Knowledge topics" value={knowledgeCount} icon={BookOpen} />
+          <StatCard label="Toolkits" value={toolkitCount} icon={Wrench} />
         </div>
-      </section>
+      </PageHeader>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <FilterBar>
+        <div className="flex w-full flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="relative w-full max-w-md">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
@@ -183,7 +177,7 @@ export default function Favorites() {
             />
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {[
               { value: "all", label: "All" },
               { value: "knowledge_topic", label: "Knowledge" },
@@ -201,62 +195,79 @@ export default function Favorites() {
                 {item.label}
               </button>
             ))}
+
+            <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-600">
+              {filteredItems.length} visible
+            </span>
           </div>
         </div>
-      </section>
+      </FilterBar>
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <div className="loading-spinner" />
         </div>
       ) : filteredItems.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
-          <Star className="mx-auto mb-4 h-10 w-10 text-slate-300" />
-          <p className="text-base font-medium text-slate-900">No favorites yet</p>
-          <p className="mt-2 text-sm text-slate-500">
-            Favorite topics and toolkits to build your own working library.
-          </p>
-        </div>
+        <EmptyState
+          icon={Star}
+          title="No favorites yet"
+          description="Favorite topics and toolkits to build your own working library and reduce search time later."
+        />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filteredItems.map((item) => {
-            const Icon = getIcon(item.type);
+        <div className="space-y-4">
+          <SectionHeader
+            eyebrow="Library"
+            title="Saved knowledge and tools"
+            description="A cleaner saved-items view with clearer type labels and faster scan paths."
+          />
 
-            return (
-              <Link key={item.id} to={item.href}>
-                <Card className="h-full rounded-2xl border-slate-200 shadow-sm transition hover:shadow-md">
-                  <CardContent className="p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="rounded-xl bg-slate-100 p-2.5">
-                        <Icon className="h-5 w-5 text-slate-700" />
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {filteredItems.map((item) => {
+              const Icon = getIcon(item.type);
+
+              return (
+                <Link key={item.id} to={item.href}>
+                  <Card className="h-full transition duration-200 hover:-translate-y-1 hover:shadow-[0_18px_44px_rgba(15,23,42,0.1)]">
+                    <CardContent className="p-5">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="rounded-xl bg-slate-100 p-2.5">
+                          <Icon className="h-5 w-5 text-slate-700" />
+                        </div>
+
+                        <Badge variant="secondary">{getLabel(item.type)}</Badge>
                       </div>
 
-                      <Badge variant="secondary">{getLabel(item.type)}</Badge>
-                    </div>
+                      <h3 className="mt-4 text-base font-semibold tracking-tight text-slate-900">
+                        {item.title}
+                      </h3>
 
-                    <h3 className="mt-4 text-base font-semibold tracking-tight text-slate-900">
-                      {item.title}
-                    </h3>
+                      <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-600">
+                        {item.description}
+                      </p>
 
-                    <p className="mt-2 text-sm leading-6 text-slate-600 line-clamp-3">
-                      {item.description}
-                    </p>
+                      <div className="mt-5 surface-muted px-4 py-4">
+                        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                          Saved
+                        </p>
+                        <p className="mt-2 text-sm font-semibold text-slate-950">
+                          {item.created_at
+                            ? new Date(item.created_at).toLocaleDateString()
+                            : "Recently added"}
+                        </p>
+                      </div>
 
-                    <div className="mt-4 flex items-center justify-between">
-                      <span className="text-xs text-slate-400">
-                        {item.created_at
-                          ? `Saved ${new Date(item.created_at).toLocaleDateString()}`
-                          : "Saved item"}
-                      </span>
-                      <ArrowRight className="h-4 w-4 text-slate-400" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            );
-          })}
+                      <div className="mt-5 flex items-center justify-between border-t border-slate-200 pt-4 text-xs text-slate-500">
+                        <span>Open resource</span>
+                        <ArrowRight className="h-4 w-4 text-slate-400" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

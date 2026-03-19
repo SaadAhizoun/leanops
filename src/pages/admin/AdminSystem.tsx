@@ -1,38 +1,95 @@
 import { useEffect, useState } from "react";
+import { Award, Inbox } from "lucide-react";
+
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Award } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  EmptyState,
+  LoadingState,
+  PageHeader,
+  PageShell,
+  SectionCard,
+  SectionHeader,
+} from "@/components/ui/page";
 
 export default function AdminSystem() {
   const [contacts, setContacts] = useState<any[]>([]);
-  useEffect(() => { supabase.from("contact_submissions").select("*").order("created_at", { ascending: false }).then(({ data }) => setContacts(data || [])); }, []);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase
+      .from("contact_submissions")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        setContacts(data || []);
+        setLoading(false);
+      });
+  }, []);
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">System</h1>
-      
-      <Card><CardHeader><CardTitle>Contact Submissions</CardTitle></CardHeader><CardContent>
-        {contacts.length === 0 ? <p className="text-muted-foreground text-sm">No submissions yet</p> : (
-          <div className="space-y-3">{contacts.map(c => (
-            <div key={c.id} className="border rounded-lg p-3">
-              <div className="flex justify-between"><span className="font-medium text-sm">{c.name}</span><span className="text-xs text-muted-foreground">{new Date(c.created_at).toLocaleDateString()}</span></div>
-              <p className="text-xs text-muted-foreground">{c.email} • {c.subject}</p>
-              <p className="text-sm mt-1">{c.message}</p>
-            </div>
-          ))}</div>
-        )}
-      </CardContent></Card>
+    <PageShell>
+      <PageHeader
+        eyebrow="System"
+        title="Platform control and inbound requests"
+        description="Monitor operational platform signals and review external contact submissions in a cleaner administrative structure."
+      />
 
-      <Card><CardHeader><CardTitle>Developer</CardTitle></CardHeader><CardContent>
-        <div className="flex items-start gap-3">
-          <Award className="h-8 w-8 text-primary flex-shrink-0 mt-1" />
-          <div>
-            <h3 className="font-semibold">Saad AHIZOUN</h3>
-            <p className="text-sm text-muted-foreground mt-1">Industrial Engineer • Lean & Operational Excellence</p>
-            <p className="text-xs text-muted-foreground mt-2">LeanOps was created by Saad AHIZOUN as a practical platform to help professionals learn, diagnose, structure, and solve operational challenges.</p>
+      <SectionCard>
+        <SectionHeader
+          eyebrow="Inbox"
+          title="Contact submissions"
+          description="Recent inbound requests are grouped here so the admin team can scan new messages quickly."
+        />
+
+        {loading ? (
+          <LoadingState className="py-12" />
+        ) : contacts.length === 0 ? (
+          <EmptyState
+            icon={Inbox}
+            title="No submissions yet"
+            description="New contact submissions will appear here once users start sending external requests."
+            className="mt-6"
+          />
+        ) : (
+          <div className="mt-6 space-y-3">
+            {contacts.map((contact) => (
+              <div key={contact.id} className="surface-muted p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-950">{contact.name}</p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {contact.email} | {contact.subject}
+                    </p>
+                  </div>
+                  <span className="text-xs text-slate-400">
+                    {new Date(contact.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+                <p className="mt-3 text-sm leading-6 text-slate-600">{contact.message}</p>
+              </div>
+            ))}
           </div>
-        </div>
-      </CardContent></Card>
-    </div>
+        )}
+      </SectionCard>
+
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-start gap-4">
+            <div className="icon-tile">
+              <Award className="h-5 w-5 text-slate-700" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Developer</p>
+              <h3 className="mt-2 text-lg font-semibold text-slate-950">Saad AHIZOUN</h3>
+              <p className="mt-1 text-sm text-slate-500">Industrial Engineer | Lean & Operational Excellence</p>
+              <p className="mt-3 text-sm leading-6 text-slate-600">
+                LeanOps was created as a practical platform to help professionals learn, diagnose, structure, and solve operational challenges.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </PageShell>
   );
 }

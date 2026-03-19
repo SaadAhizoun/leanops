@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, Star, BookOpen, Wrench, CheckCircle2 } from "lucide-react";
+
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { LoadingState, PageHeader, PageShell, SectionHeader } from "@/components/ui/page";
 import { useToast } from "@/hooks/use-toast";
 
 type Topic = {
@@ -43,7 +45,7 @@ export default function KnowledgeTopic() {
       setLoading(false);
     }
 
-    loadTopic();
+    void loadTopic();
   }, [slug]);
 
   const handleFavorite = async () => {
@@ -86,11 +88,7 @@ export default function KnowledgeTopic() {
   }, [topic]);
 
   if (loading) {
-    return (
-      <div className="flex justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      </div>
-    );
+    return <LoadingState />;
   }
 
   if (!topic) {
@@ -105,48 +103,47 @@ export default function KnowledgeTopic() {
   }
 
   return (
-    <div className="max-w-5xl space-y-6">
-      <div className="flex flex-wrap items-center gap-3">
-        <Button variant="ghost" size="sm" asChild>
-          <Link to="/app/knowledge">
-            <ArrowLeft className="mr-1 h-4 w-4" />
-            Back
-          </Link>
-        </Button>
+    <PageShell className="max-w-5xl">
+      <PageHeader
+        eyebrow="Knowledge Topic"
+        title={topic.title}
+        description={topic.overview || "Use this topic as a practical reference during problem solving and execution work."}
+        actions={
+          <>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/app/knowledge">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
+              </Link>
+            </Button>
 
-        <Button variant="outline" size="sm" onClick={handleFavorite}>
-          <Star className="mr-1 h-4 w-4" />
-          Favorite
-        </Button>
+            <Button variant="outline" size="sm" onClick={handleFavorite}>
+              <Star className="mr-2 h-4 w-4" />
+              Favorite
+            </Button>
 
-        <Button variant="outline" size="sm" asChild>
-          <Link to="/app/problems/new">Use in a case</Link>
-        </Button>
-      </div>
-
-      <section className="rounded-3xl border border-slate-200 bg-white px-6 py-7 shadow-sm md:px-8">
-        <div className="max-w-3xl">
-          <p className="text-sm font-medium text-slate-500">Knowledge Topic</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
-            {topic.title}
-          </h1>
-          {topic.overview && (
-            <p className="mt-3 text-base leading-7 text-slate-600">
-              {topic.overview}
-            </p>
-          )}
-        </div>
-      </section>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/app/problems/new">Use in a case</Link>
+            </Button>
+          </>
+        }
+      />
 
       <div className="space-y-6">
         {sections.map((section) => (
           <Card key={section.title} className="rounded-2xl border-slate-200 shadow-sm">
             <CardContent className="p-6">
+              <SectionHeader
+                eyebrow="Topic section"
+                title={section.title}
+                description="Structured guidance organized into focused sections for faster reading and reuse."
+                className="mb-4"
+              />
+
               <div className="mb-4 flex items-center gap-2">
-                <section.icon className="h-4 w-4 text-slate-500" />
-                <h2 className="text-lg font-semibold tracking-tight text-slate-900">
-                  {section.title}
-                </h2>
+                <div className="icon-tile">
+                  <section.icon className="h-4 w-4 text-slate-700" />
+                </div>
               </div>
 
               <div className="whitespace-pre-line text-sm leading-7 text-slate-600">
@@ -156,6 +153,6 @@ export default function KnowledgeTopic() {
           </Card>
         ))}
       </div>
-    </div>
+    </PageShell>
   );
 }

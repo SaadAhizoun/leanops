@@ -1,10 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   Lightbulb,
@@ -13,6 +8,13 @@ import {
   Save,
   CheckCircle2,
 } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { PageHeader, PageShell, SectionCard, SectionHeader } from "@/components/ui/page";
 import { useToast } from "@/hooks/use-toast";
 
 type ToolDefinition = {
@@ -48,7 +50,7 @@ const TOOL_DETAILS: Record<string, ToolDefinition> = {
       "Confusing blame with analysis.",
     ],
     visual:
-      "Use a vertical chain: Problem → Why 1 → Why 2 → Why 3 → Why 4 → Why 5 → Root Cause.",
+      "Use a vertical chain: Problem -> Why 1 -> Why 2 -> Why 3 -> Why 4 -> Why 5 -> Root Cause.",
   },
   ishikawa: {
     title: "Ishikawa",
@@ -373,31 +375,19 @@ export default function ToolkitDetail() {
   }
 
   return (
-    <div className="max-w-6xl space-y-6">
-      <Button variant="ghost" asChild>
-        <Link to="/app/toolkits">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Link>
-      </Button>
-
-      <section className="rounded-3xl border border-slate-200 bg-white px-6 py-7 shadow-sm md:px-8">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl">
-            <p className="text-sm font-medium text-slate-500">{tool.category}</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
-              {tool.title}
-            </h1>
-            <p className="mt-3 text-base leading-7 text-slate-600">{tool.intro}</p>
-            <p className="mt-3 text-sm text-slate-500">
-              <span className="font-medium text-slate-700">Best use:</span> {tool.bestUse}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            {lastSaved && (
-              <span className="text-xs text-slate-500">Last saved: {lastSaved}</span>
-            )}
+    <PageShell className="max-w-6xl">
+      <PageHeader
+        eyebrow={tool.category}
+        title={tool.title}
+        description={tool.intro}
+        actions={
+          <>
+            <Button variant="outline" asChild>
+              <Link to="/app/toolkits">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
+              </Link>
+            </Button>
 
             <Button variant="outline" className="rounded-xl" onClick={handleSave}>
               <Save className="mr-2 h-4 w-4" />
@@ -410,36 +400,43 @@ export default function ToolkitDetail() {
                 Use in a case
               </Link>
             </Button>
-          </div>
+          </>
+        }
+      >
+        <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 font-medium text-slate-700">
+            Best use: {tool.bestUse}
+          </span>
+          {lastSaved ? <span>Last saved: {lastSaved}</span> : null}
         </div>
-      </section>
+      </PageHeader>
 
       <div className="grid gap-6 xl:grid-cols-[1fr_320px]">
         <div className="space-y-6">
-          <Card className="rounded-2xl border-slate-200 shadow-sm">
-            <CardContent className="p-6">
-              <h3 className="mb-4 text-lg font-semibold tracking-tight text-slate-900">
-                How to use it
-              </h3>
-              <ul className="space-y-3">
-                {tool.steps.map((step) => (
-                  <li key={step} className="flex gap-3 text-sm leading-6 text-slate-600">
-                    <span className="mt-1 h-2 w-2 rounded-full bg-slate-300" />
-                    <span>{step}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+          <SectionCard>
+            <SectionHeader
+              eyebrow="Guidance"
+              title="How to use it"
+              description="A clear execution sequence to keep the method practical rather than theoretical."
+            />
+            <ul className="mt-5 space-y-3">
+              {tool.steps.map((step) => (
+                <li key={step} className="flex gap-3 text-sm leading-6 text-slate-600">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-slate-300" />
+                  <span>{step}</span>
+                </li>
+              ))}
+            </ul>
+          </SectionCard>
 
-          <Card className="rounded-2xl border-slate-200 shadow-sm">
-            <CardContent className="p-6">
-              <h3 className="mb-4 text-lg font-semibold tracking-tight text-slate-900">
-                Working area
-              </h3>
-              {workingArea}
-            </CardContent>
-          </Card>
+          <SectionCard>
+            <SectionHeader
+              eyebrow="Workspace"
+              title="Working area"
+              description="Use the structured input area below to document the exercise directly."
+            />
+            <div className="mt-5">{workingArea}</div>
+          </SectionCard>
         </div>
 
         <div className="space-y-6">
@@ -483,6 +480,6 @@ export default function ToolkitDetail() {
           </Card>
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }

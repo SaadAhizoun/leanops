@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Trash2, Archive, ShieldAlert } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { PageHeader, PageShell, SectionCard, SectionHeader } from "@/components/ui/page";
 import { useToast } from "@/hooks/use-toast";
 
 const cleanupOptions = [
@@ -55,24 +57,26 @@ export default function AdminDataCleanup() {
   };
 
   return (
-    <div className="space-y-8">
-      <section className="rounded-3xl border border-slate-200 bg-white px-6 py-7 shadow-sm md:px-8">
-        <p className="text-sm font-medium text-slate-500">Admin Cleanup</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
-          Data cleanup center
-        </h1>
-        <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-          Prepare safe archive and cleanup actions to keep LeanOps organized and maintain operational clarity.
-        </p>
-      </section>
+    <PageShell>
+      <PageHeader
+        eyebrow="Admin Cleanup"
+        title="Data cleanup center"
+        description="Prepare safe archive and cleanup actions to keep LeanOps organized and maintain operational clarity."
+      />
 
       <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
-        <div className="space-y-4">
+        <SectionCard className="space-y-4">
+          <SectionHeader
+            eyebrow="Actions"
+            title="Available cleanup workflows"
+            description="Select a safe administrative action to review before anything is automated or made destructive."
+          />
+
           {cleanupOptions.map((item) => (
             <button
               key={item.id}
               onClick={() => setSelected(item.id)}
-              className={`w-full text-left rounded-2xl border p-5 transition ${
+              className={`w-full rounded-2xl border p-5 text-left transition ${
                 selected === item.id
                   ? "border-slate-900 bg-slate-900 text-white"
                   : "border-slate-200 bg-white hover:bg-slate-50"
@@ -104,7 +108,7 @@ export default function AdminDataCleanup() {
               </div>
             </button>
           ))}
-        </div>
+        </SectionCard>
 
         <Card className="rounded-2xl border-slate-200 shadow-sm">
           <CardContent className="p-6">
@@ -139,6 +143,6 @@ export default function AdminDataCleanup() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </PageShell>
   );
 }

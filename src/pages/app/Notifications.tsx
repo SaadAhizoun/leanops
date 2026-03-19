@@ -1,18 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { AlertTriangle, ArrowRight, Bell, CheckCircle2, Clock3, Info, Search } from "lucide-react";
+
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import {
-  Bell,
-  Search,
-  ArrowRight,
-  Clock3,
-  AlertTriangle,
-  CheckCircle2,
-  Info,
-} from "lucide-react";
+import { EmptyState, FilterBar, LoadingState, PageHeader, PageShell } from "@/components/ui/page";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 type CaseItem = {
   id: string;
@@ -58,14 +52,8 @@ export default function Notifications() {
       setLoading(true);
 
       const [casesResponse, projectsResponse] = await Promise.all([
-        supabase
-          .from("cases")
-          .select("id, title, status, current_stage, updated_at")
-          .order("updated_at", { ascending: false }),
-        supabase
-          .from("projects")
-          .select("id, title, status, updated_at")
-          .order("updated_at", { ascending: false }),
+        supabase.from("cases").select("id, title, status, current_stage, updated_at").order("updated_at", { ascending: false }),
+        supabase.from("projects").select("id, title, status, updated_at").order("updated_at", { ascending: false }),
       ]);
 
       setCases((casesResponse.data as CaseItem[]) || []);
@@ -144,17 +132,11 @@ export default function Notifications() {
       date: new Date().toISOString(),
     });
 
-    return items.sort((a, b) => {
-      const da = new Date(a.date).getTime();
-      const db = new Date(b.date).getTime();
-      return db - da;
-    });
+    return items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [cases, projects]);
 
   const filtered = useMemo(() => {
-    return notifications.filter((n) =>
-      `${n.title} ${n.body}`.toLowerCase().includes(search.toLowerCase())
-    );
+    return notifications.filter((item) => `${item.title} ${item.body}`.toLowerCase().includes(search.toLowerCase()));
   }, [notifications, search]);
 
   const getIcon = (level: NotificationItem["level"]) => {
@@ -163,92 +145,78 @@ export default function Notifications() {
     return Info;
   };
 
-  const getBadge = (type: NotificationItem["type"]) => {
+  const getLabel = (type: NotificationItem["type"]) => {
     if (type === "case") return "Case";
     if (type === "project") return "Project";
     return "System";
   };
 
   return (
-    <div className="space-y-8">
-      <section className="rounded-3xl border border-slate-200 bg-white px-6 py-7 shadow-sm md:px-8">
-        <div className="max-w-3xl">
-          <p className="text-sm font-medium text-slate-500">Notifications</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
-            Follow-up and activity signals
-          </h1>
-          <p className="mt-3 text-base leading-7 text-slate-600">
-            Review what needs attention across cases, projects, and system reminders.
-          </p>
-        </div>
+    <PageShell>
+      <PageHeader
+        eyebrow="Notifications"
+        title="Follow-up and activity signals"
+        description="Review what needs attention across cases, projects, and system reminders."
+      />
 
-        <div className="mt-6 relative max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+      <FilterBar>
+        <div className="relative w-full max-w-md">
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
             placeholder="Search notifications..."
-            className="pl-9"
+            className="pl-11"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-      </section>
+      </FilterBar>
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        </div>
+        <LoadingState />
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
-          <Bell className="mx-auto mb-4 h-10 w-10 text-slate-300" />
-          <p className="text-base font-medium text-slate-900">No notifications</p>
-          <p className="mt-2 text-sm text-slate-500">
-            Signals and reminders will appear here as your work grows.
-          </p>
-        </div>
+        <EmptyState
+          icon={Bell}
+          title="No notifications"
+          description="Signals and reminders will appear here as your work grows."
+        />
       ) : (
-        <div className="space-y-4">
+        <div className="section-stack">
           {filtered.map((item) => {
             const Icon = getIcon(item.level);
 
             return (
-              <Card key={item.id} className="rounded-2xl border-slate-200 shadow-sm">
-                <CardContent className="p-5">
+              <Card key={item.id}>
+                <CardContent className="p-5 md:p-6">
                   <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div className="flex min-w-0 gap-4">
-                      <div className="rounded-xl bg-slate-100 p-2.5">
+                      <div className="icon-tile">
                         <Icon className="h-5 w-5 text-slate-700" />
                       </div>
 
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="font-semibold text-slate-900">
-                            {item.title}
-                          </h3>
-                          <Badge variant="secondary">{getBadge(item.type)}</Badge>
+                          <h3 className="font-semibold text-slate-950">{item.title}</h3>
+                          <StatusBadge value={item.level}>{getLabel(item.type)}</StatusBadge>
                         </div>
 
-                        <p className="mt-2 text-sm leading-6 text-slate-600">
-                          {item.body}
-                        </p>
+                        <p className="mt-3 text-sm leading-7 text-slate-600">{item.body}</p>
 
-                        <div className="mt-3 inline-flex items-center gap-2 text-xs text-slate-500">
+                        <div className="mt-4 inline-flex items-center gap-2 text-xs text-slate-500">
                           <Clock3 className="h-3.5 w-3.5" />
-                          {item.date
-                            ? new Date(item.date).toLocaleString()
-                            : "No date"}
+                          {item.date ? new Date(item.date).toLocaleString() : "No date"}
                         </div>
                       </div>
                     </div>
 
-                    {item.href && (
+                    {item.href ? (
                       <button
                         onClick={() => navigate(item.href!)}
-                        className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-900 transition hover:bg-slate-100"
+                        className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition-[transform,background-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-[0_10px_24px_rgba(15,23,42,0.06)]"
                       >
                         Open
                         <ArrowRight className="h-4 w-4" />
                       </button>
-                    )}
+                    ) : null}
                   </div>
                 </CardContent>
               </Card>
@@ -256,6 +224,6 @@ export default function Notifications() {
           })}
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

@@ -26,22 +26,27 @@ export default function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-10 rounded-xl px-2 hover:bg-muted">
+        <Button variant="ghost" className="h-11 rounded-2xl border border-slate-200/80 bg-white/80 px-2.5 shadow-sm hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_12px_24px_rgba(15,23,42,0.08)]">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,hsl(var(--primary)),rgba(14,165,233,0.92))] text-xs font-bold text-primary-foreground shadow-sm">
               {initials}
             </div>
             <div className="hidden text-left md:block">
-              <p className="max-w-[140px] truncate text-sm font-medium">
+              <p className="max-w-[140px] truncate text-sm font-semibold text-slate-900">
                 {profile?.full_name || "LeanOps User"}
               </p>
-              <p className="text-xs capitalize text-muted-foreground">{role}</p>
+              <p className="text-xs capitalize text-slate-500">{role}</p>
             </div>
           </div>
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-56 rounded-xl">
+      <DropdownMenuContent align="end" className="w-60">
+        <div className="px-3 py-2">
+          <p className="text-sm font-semibold text-slate-950">{profile?.full_name || "LeanOps User"}</p>
+          <p className="text-xs text-slate-500">{user?.email || "Workspace member"}</p>
+        </div>
+        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => navigate("/app/profile")}>
           <User className="mr-2 h-4 w-4" />
           Profile

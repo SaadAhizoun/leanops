@@ -1,20 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
+  Activity,
+  ArrowRight,
+  CheckCircle2,
+  FileText,
+  FolderOpen,
   Plus,
   Search,
-  ArrowRight,
-  FolderOpen,
-  Activity,
-  FileText,
-  CheckCircle2,
 } from "lucide-react";
+
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { EmptyState, FilterBar, PageHeader, StatCard } from "@/components/ui/page";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 type CaseItem = {
   id: string;
@@ -27,16 +29,6 @@ type CaseItem = {
   impacted_kpi: string | null;
   updated_at: string | null;
 };
-
-function getStatusClass(status: string | null) {
-  if (status === "completed") {
-    return "border-emerald-200 bg-emerald-50 text-emerald-700";
-  }
-  if (status === "active") {
-    return "border-blue-200 bg-blue-50 text-blue-700";
-  }
-  return "border-slate-200 bg-slate-100 text-slate-700";
-}
 
 export default function Problems() {
   const { user } = useAuth();
@@ -64,221 +56,141 @@ export default function Problems() {
   }, [user]);
 
   const filtered = useMemo(() => {
-    return cases.filter((c) => {
+    return cases.filter((item) => {
       const haystack =
-        `${c.title || ""} ${c.problem_type || ""} ${c.sector || ""} ${c.impacted_kpi || ""}`.toLowerCase();
+        `${item.title || ""} ${item.problem_type || ""} ${item.sector || ""} ${item.impacted_kpi || ""}`.toLowerCase();
 
       return haystack.includes(search.toLowerCase());
     });
   }, [cases, search]);
 
-  const stats = useMemo(() => {
-    return {
+  const stats = useMemo(
+    () => ({
       total: cases.length,
-      active: cases.filter((c) => c.status === "active").length,
-      draft: cases.filter((c) => c.status === "draft").length,
-      completed: cases.filter((c) => c.status === "completed").length,
-    };
-  }, [cases]);
+      active: cases.filter((item) => item.status === "active").length,
+      draft: cases.filter((item) => item.status === "draft").length,
+      completed: cases.filter((item) => item.status === "completed").length,
+    }),
+    [cases],
+  );
 
   return (
     <div className="space-y-8">
-      <section className="page-header">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl">
-            <p className="text-sm font-medium text-slate-500">Problem Solving</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
-              Structured problem-solving cases
-            </h1>
-            <p className="mt-3 text-base leading-7 text-slate-600">
-              Create, review, and continue operational problem-solving work across your cases.
-            </p>
-          </div>
-
-          <Button asChild className="h-11 rounded-xl px-5 shadow-sm">
+      <PageHeader
+        eyebrow="Problem Solving"
+        title="Structured problem-solving cases"
+        description="Create, review, and continue operational problem-solving work with cleaner hierarchy and easier scanning."
+        actions={
+          <Button asChild>
             <Link to="/app/problems/new">
               <Plus className="mr-2 h-4 w-4" />
               New Case
             </Link>
           </Button>
+        }
+      >
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <StatCard label="Total cases" value={stats.total} icon={FolderOpen} />
+          <StatCard label="Active" value={stats.active} icon={Activity} />
+          <StatCard label="Drafts" value={stats.draft} icon={FileText} />
+          <StatCard label="Completed" value={stats.completed} icon={CheckCircle2} />
+        </div>
+      </PageHeader>
+
+      <FilterBar>
+        <div className="relative w-full max-w-md">
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Input
+            placeholder="Search by title, type, sector, or KPI..."
+            className="pl-11"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <div className="metric-card">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-slate-500">Total cases</p>
-                <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">
-                  {stats.total}
-                </p>
-              </div>
-              <div className="rounded-xl bg-slate-100 p-2.5">
-                <FolderOpen className="h-5 w-5 text-slate-700" />
-              </div>
-            </div>
-          </div>
-
-          <div className="metric-card">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-slate-500">Active</p>
-                <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">
-                  {stats.active}
-                </p>
-              </div>
-              <div className="rounded-xl bg-slate-100 p-2.5">
-                <Activity className="h-5 w-5 text-slate-700" />
-              </div>
-            </div>
-          </div>
-
-          <div className="metric-card">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-slate-500">Drafts</p>
-                <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">
-                  {stats.draft}
-                </p>
-              </div>
-              <div className="rounded-xl bg-slate-100 p-2.5">
-                <FileText className="h-5 w-5 text-slate-700" />
-              </div>
-            </div>
-          </div>
-
-          <div className="metric-card">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-slate-500">Completed</p>
-                <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">
-                  {stats.completed}
-                </p>
-              </div>
-              <div className="rounded-xl bg-slate-100 p-2.5">
-                <CheckCircle2 className="h-5 w-5 text-slate-700" />
-              </div>
-            </div>
-          </div>
+        <div className="flex items-center gap-3 text-sm text-slate-500">
+          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 font-medium text-slate-700">
+            {filtered.length} found
+          </span>
+          <span>Structured case library</span>
         </div>
-      </section>
-
-      <section className="surface-card p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="relative w-full max-w-md">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <Input
-              placeholder="Search cases..."
-              className="h-11 rounded-xl border-slate-200 bg-white pl-9"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-
-          <p className="text-sm text-slate-500">
-            {filtered.length} case{filtered.length > 1 ? "s" : ""} found
-          </p>
-        </div>
-      </section>
+      </FilterBar>
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <div className="flex justify-center py-16">
+          <div className="loading-spinner" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="surface-card p-12 text-center">
-          <Search className="mx-auto mb-4 h-10 w-10 text-slate-300" />
-          <p className="text-base font-medium text-slate-900">No cases found</p>
-          <p className="mt-2 text-sm text-slate-500">
-            Start your first structured case or refine your search.
-          </p>
-          <Button asChild className="mt-6 h-11 rounded-xl px-5">
-            <Link to="/app/problems/new">
-              <Plus className="mr-2 h-4 w-4" />
-              Start First Case
-            </Link>
-          </Button>
-        </div>
+        <EmptyState
+          icon={Search}
+          title="No cases found"
+          description="Start your first structured case or refine your search to uncover active problem-solving work."
+          action={
+            <Button asChild>
+              <Link to="/app/problems/new">
+                <Plus className="mr-2 h-4 w-4" />
+                Start First Case
+              </Link>
+            </Button>
+          }
+        />
       ) : (
         <div className="grid gap-4 xl:grid-cols-2">
-          {filtered.map((c) => (
-            <Link key={c.id} to={`/app/problems/${c.id}`}>
-              <Card className="h-full rounded-2xl border-slate-200 shadow-sm transition hover:shadow-md">
+          {filtered.map((item) => (
+            <Link key={item.id} to={`/app/problems/${item.id}`}>
+              <Card className="h-full transition duration-200 hover:-translate-y-1 hover:shadow-[0_18px_44px_rgba(15,23,42,0.1)]">
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="truncate text-base font-semibold tracking-tight text-slate-900">
-                          {c.title || "Untitled case"}
+                        <h3 className="truncate text-base font-semibold tracking-tight text-slate-950">
+                          {item.title || "Untitled case"}
                         </h3>
-
-                        <span
-                          className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${getStatusClass(
-                            c.status
-                          )}`}
-                        >
-                          {c.status || "draft"}
-                        </span>
+                        <StatusBadge value={item.status} />
                       </div>
-
                       <p className="mt-2 text-sm text-slate-500">
-                        {c.problem_type || "Case"} • {c.sector || "—"}
+                        {item.problem_type || "Case"} - {item.sector || "Not assigned"}
                       </p>
                     </div>
 
-                    <ArrowRight className="h-4 w-4 shrink-0 text-slate-400" />
+                    <div className="flex h-9 w-9 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50">
+                      <ArrowRight className="h-4 w-4 text-slate-400" />
+                    </div>
                   </div>
 
                   <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
-                      <p className="text-[11px] uppercase tracking-wide text-slate-500">
-                        Stage
-                      </p>
-                      <p className="mt-1 text-sm font-medium text-slate-900">
-                        {c.current_stage || 1}/12
-                      </p>
+                    <div className="surface-muted px-3 py-3">
+                      <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-slate-500">Stage</p>
+                      <p className="mt-2 text-sm font-semibold text-slate-950">{item.current_stage || 1}/12</p>
                     </div>
-
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
-                      <p className="text-[11px] uppercase tracking-wide text-slate-500">
-                        Priority
-                      </p>
-                      <p className="mt-1 text-sm font-medium capitalize text-slate-900">
-                        {c.priority || "medium"}
-                      </p>
+                    <div className="surface-muted px-3 py-3">
+                      <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-slate-500">Priority</p>
+                      <div className="mt-2">
+                        <StatusBadge value={item.priority} />
+                      </div>
                     </div>
-
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
-                      <p className="text-[11px] uppercase tracking-wide text-slate-500">
-                        KPI
-                      </p>
-                      <p className="mt-1 truncate text-sm font-medium text-slate-900">
-                        {c.impacted_kpi || "—"}
-                      </p>
+                    <div className="surface-muted px-3 py-3">
+                      <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-slate-500">KPI</p>
+                      <p className="mt-2 truncate text-sm font-semibold text-slate-950">{item.impacted_kpi || "Not set"}</p>
                     </div>
                   </div>
 
-                  <div className="mt-4">
-                    <p className="mb-2 text-xs uppercase tracking-wide text-slate-500">
-                      Progress
-                    </p>
-                    <div className="h-2.5 w-full rounded-full bg-slate-100">
+                  <div className="mt-5">
+                    <div className="mb-2 flex items-center justify-between text-xs font-medium uppercase tracking-[0.16em] text-slate-500">
+                      <span>Progress</span>
+                      <span>{Math.round(((item.current_stage || 1) / 12) * 100)}%</span>
+                    </div>
+                    <div className="h-2.5 rounded-full bg-slate-100">
                       <div
                         className="h-2.5 rounded-full bg-slate-900 transition-all"
-                        style={{
-                          width: `${Math.round(((c.current_stage || 1) / 12) * 100)}%`,
-                        }}
+                        style={{ width: `${Math.round(((item.current_stage || 1) / 12) * 100)}%` }}
                       />
                     </div>
                   </div>
 
-                  <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
-                    <span>
-                      Updated:{" "}
-                      {c.updated_at
-                        ? new Date(c.updated_at).toLocaleDateString()
-                        : "—"}
-                    </span>
-                    <span className="font-medium text-slate-700">Open case</span>
+                  <div className="mt-5 flex items-center justify-between border-t border-slate-200 pt-4 text-xs text-slate-500">
+                    <span>{item.updated_at ? new Date(item.updated_at).toLocaleDateString() : "No recent update"}</span>
+                    <span className="font-semibold text-slate-700">Open case</span>
                   </div>
                 </CardContent>
               </Card>

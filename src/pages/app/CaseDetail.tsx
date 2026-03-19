@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { PageShell } from "@/components/ui/page";
 import {
   ArrowLeft,
   Save,
@@ -631,7 +632,7 @@ export default function CaseDetail() {
   }
 
   return (
-    <div className="space-y-6">
+    <PageShell className="max-w-[1400px] space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Button variant="ghost" size="sm" asChild>
           <Link to="/app/problems">
@@ -661,7 +662,7 @@ export default function CaseDetail() {
         </div>
       </div>
 
-      <section className="rounded-3xl border border-slate-200 bg-white px-6 py-7 shadow-sm md:px-8">
+      <section className="page-header">
         <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-3xl">
             <p className="text-sm font-medium text-slate-500">Case Workspace</p>
@@ -953,6 +954,6 @@ export default function CaseDetail() {
           </Card>
         </aside>
       </div>
-    </div>
+    </PageShell>
   );
 }

@@ -1,20 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
+import {
+  Activity,
+  ArrowRight,
+  BookOpen,
+  FolderKanban,
+  Shield,
+  Users,
+  Wrench,
+} from "lucide-react";
+
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Users,
-  FolderKanban,
-  Activity,
-  BookOpen,
-  Wrench,
-  Shield,
-  ArrowRight,
-} from "lucide-react";
+import { PageHeader, SectionCard, SectionHeader, StatCard } from "@/components/ui/page";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 type BasicRow = {
   id: string;
   status?: string | null;
-  role?: string | null;
   title?: string | null;
   updated_at?: string | null;
 };
@@ -50,20 +52,17 @@ export default function AdminDashboard() {
     load();
   }, []);
 
-  const stats = useMemo(() => {
-    return [
+  const stats = useMemo(
+    () => [
       { label: "Users", value: users.length, icon: Users },
       { label: "Cases", value: cases.length, icon: Activity },
       { label: "Projects", value: projects.length, icon: FolderKanban },
       { label: "Knowledge Topics", value: topics.length, icon: BookOpen },
       { label: "Toolkits", value: toolkits.length, icon: Wrench },
-      {
-        label: "Active Cases",
-        value: cases.filter((c) => c.status === "active").length,
-        icon: Shield,
-      },
-    ];
-  }, [users, cases, projects, topics, toolkits]);
+      { label: "Active Cases", value: cases.filter((item) => item.status === "active").length, icon: Shield },
+    ],
+    [users, cases, projects, topics, toolkits],
+  );
 
   const recentCases = [...cases]
     .sort((a, b) => new Date(b.updated_at || "").getTime() - new Date(a.updated_at || "").getTime())
@@ -75,111 +74,79 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-3xl border border-slate-200 bg-white px-6 py-7 shadow-sm md:px-8">
-        <p className="text-sm font-medium text-slate-500">Admin</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
-          Platform control center
-        </h1>
-        <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-          Monitor platform activity, content volume, and operational health across LeanOps.
-        </p>
-      </section>
+      <PageHeader
+        eyebrow="Admin"
+        title="Platform control center"
+        description="Monitor platform activity, content volume, and operational health across LeanOps with cleaner information architecture."
+      >
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {stats.map((stat) => (
+            <StatCard key={stat.label} label={stat.label} value={loading ? "..." : stat.value} icon={stat.icon} />
+          ))}
+        </div>
+      </PageHeader>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-slate-500">{stat.label}</p>
-                <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">
-                  {loading ? "..." : stat.value}
-                </p>
-              </div>
+      <div className="grid gap-6 xl:grid-cols-2">
+        <SectionCard as="div">
+          <SectionHeader
+            eyebrow="Activity"
+            title="Recent cases"
+            description="Recently updated problem-solving workspaces."
+          />
 
-              <div className="rounded-xl bg-slate-100 p-2.5">
-                <stat.icon className="h-5 w-5 text-slate-700" />
+          <div className="mt-6 space-y-3">
+            {recentCases.length === 0 ? (
+              <div className="rounded-[1.5rem] border border-dashed border-slate-300 p-5 text-sm text-slate-500">
+                No cases yet.
               </div>
-            </div>
+            ) : (
+              recentCases.map((item) => (
+                <Card key={item.id}>
+                  <CardContent className="flex items-center justify-between gap-4 p-4">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-slate-950">{item.title || "Untitled case"}</p>
+                      <div className="mt-2">
+                        <StatusBadge value={item.status || "draft"} />
+                      </div>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-slate-400" />
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
-        ))}
-      </section>
+        </SectionCard>
 
-      <section className="grid gap-6 xl:grid-cols-2">
-        <Card className="rounded-2xl border-slate-200 shadow-sm">
-          <CardContent className="p-6">
-            <h3 className="text-xl font-semibold tracking-tight text-slate-900">
-              Recent cases
-            </h3>
-            <p className="mt-1 text-sm text-slate-500">
-              Recently updated problem-solving workspaces.
-            </p>
+        <SectionCard as="div">
+          <SectionHeader
+            eyebrow="Portfolio"
+            title="Recent projects"
+            description="Recently updated initiatives and programs."
+          />
 
-            <div className="mt-6 space-y-3">
-              {recentCases.length === 0 ? (
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
-                  No cases yet.
-                </div>
-              ) : (
-                recentCases.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-4"
-                  >
-                    <div>
-                      <p className="font-medium text-slate-900">
-                        {item.title || "Untitled case"}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-500">
-                        {item.status || "draft"}
-                      </p>
+          <div className="mt-6 space-y-3">
+            {recentProjects.length === 0 ? (
+              <div className="rounded-[1.5rem] border border-dashed border-slate-300 p-5 text-sm text-slate-500">
+                No projects yet.
+              </div>
+            ) : (
+              recentProjects.map((item) => (
+                <Card key={item.id}>
+                  <CardContent className="flex items-center justify-between gap-4 p-4">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-slate-950">{item.title || "Untitled project"}</p>
+                      <div className="mt-2">
+                        <StatusBadge value={item.status || "active"} />
+                      </div>
                     </div>
                     <ArrowRight className="h-4 w-4 text-slate-400" />
-                  </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl border-slate-200 shadow-sm">
-          <CardContent className="p-6">
-            <h3 className="text-xl font-semibold tracking-tight text-slate-900">
-              Recent projects
-            </h3>
-            <p className="mt-1 text-sm text-slate-500">
-              Recently updated initiatives and programs.
-            </p>
-
-            <div className="mt-6 space-y-3">
-              {recentProjects.length === 0 ? (
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
-                  No projects yet.
-                </div>
-              ) : (
-                recentProjects.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-4"
-                  >
-                    <div>
-                      <p className="font-medium text-slate-900">
-                        {item.title || "Untitled project"}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-500">
-                        {item.status || "active"}
-                      </p>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-slate-400" />
-                  </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </section>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </SectionCard>
+      </div>
     </div>
   );
 }

@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import {
   Plus,
   FolderOpen,
@@ -18,7 +16,11 @@ import {
   BarChart3,
   Target,
 } from "lucide-react";
+
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { PageHeader, PageShell, SectionCard, SectionHeader, StatCard } from "@/components/ui/page";
 
 type CaseItem = {
   id: string;
@@ -120,46 +122,46 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-  async function loadDashboard() {
-    if (!user) return;
+    async function loadDashboard() {
+      if (!user) return;
 
-    setLoading(true);
+      setLoading(true);
 
-    const casesResponse = await (supabase as any)
-      .from("cases")
-      .select("id, title, status, current_stage, problem_type, sector, updated_at")
-      .eq("user_id", user.id)
-      .order("updated_at", { ascending: false });
+      const casesResponse = await (supabase as any)
+        .from("cases")
+        .select("id, title, status, current_stage, problem_type, sector, updated_at")
+        .eq("user_id", user.id)
+        .order("updated_at", { ascending: false });
 
-    const projectsResponse = await (supabase as any)
-      .from("projects")
-      .select("id, title, status, updated_at")
-      .eq("user_id", user.id)
-      .order("updated_at", { ascending: false });
+      const projectsResponse = await (supabase as any)
+        .from("projects")
+        .select("id, title, status, updated_at")
+        .eq("user_id", user.id)
+        .order("updated_at", { ascending: false });
 
-    const actionsResponse = await (supabase as any)
-      .from("actions")
-      .select("id, case_id, title, status, deadline, owner, updated_at")
-      .eq("user_id", user.id)
-      .order("updated_at", { ascending: false });
+      const actionsResponse = await (supabase as any)
+        .from("actions")
+        .select("id, case_id, title, status, deadline, owner, updated_at")
+        .eq("user_id", user.id)
+        .order("updated_at", { ascending: false });
 
-    const announcementsResponse = await (supabase as any)
-  .from("announcements")
-  .select("id, title, content, active, updated_at")
-  .eq("active", true)
-  .order("updated_at", { ascending: false })
-  .limit(3);
+      const announcementsResponse = await (supabase as any)
+        .from("announcements")
+        .select("id, title, content, active, updated_at")
+        .eq("active", true)
+        .order("updated_at", { ascending: false })
+        .limit(3);
 
-    setCases(((casesResponse.data ?? []) as unknown) as CaseItem[]);
-    setProjects(((projectsResponse.data ?? []) as unknown) as ProjectItem[]);
-    setActions(((actionsResponse.data ?? []) as unknown) as ActionItem[]);
-    setAnnouncements(((announcementsResponse.data ?? []) as unknown) as AnnouncementItem[]);
+      setCases(((casesResponse.data ?? []) as unknown) as CaseItem[]);
+      setProjects(((projectsResponse.data ?? []) as unknown) as ProjectItem[]);
+      setActions(((actionsResponse.data ?? []) as unknown) as ActionItem[]);
+      setAnnouncements(((announcementsResponse.data ?? []) as unknown) as AnnouncementItem[]);
 
-    setLoading(false);
-  }
+      setLoading(false);
+    }
 
-  loadDashboard();
-}, [user]);
+    void loadDashboard();
+  }, [user]);
 
   const stats = useMemo(() => {
     const activeCases = cases.filter((c) => c.status === "active").length;
@@ -168,10 +170,10 @@ export default function Dashboard() {
     const openActions = actions.filter((a) => a.status !== "done").length;
 
     return [
-      { label: "Active Cases", value: activeCases, icon: Activity },
+      { label: "Active cases", value: activeCases, icon: Activity },
       { label: "Drafts", value: draftCases, icon: FileText },
       { label: "Projects", value: totalProjects, icon: FolderKanban },
-      { label: "Open Actions", value: openActions, icon: CheckCircle2 },
+      { label: "Open actions", value: openActions, icon: CheckCircle2 },
     ];
   }, [cases, projects, actions]);
 
@@ -208,24 +210,14 @@ export default function Dashboard() {
     "there";
 
   return (
-    <div className="space-y-8">
-      <section className="page-header">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-2xl">
-            <p className="text-sm font-medium text-slate-500">Dashboard</p>
-            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
-              Welcome back, {welcomeName}
-            </h2>
-            <p className="mt-3 text-base leading-7 text-slate-600">
-              Track cases, launch improvement work, explore Lean knowledge, and keep execution moving in one practical workspace.
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Button
-              className="h-11 rounded-xl px-5 shadow-sm"
-              onClick={() => navigate("/app/problems/new")}
-            >
+    <PageShell>
+      <PageHeader
+        eyebrow="Dashboard"
+        title={`Welcome back, ${welcomeName}`}
+        description="Track cases, launch improvement work, explore Lean knowledge, and keep execution moving in one practical workspace."
+        actions={
+          <>
+            <Button className="h-11 rounded-xl px-5 shadow-sm" onClick={() => navigate("/app/problems/new")}>
               <Plus className="mr-2 h-4 w-4" />
               Start New Case
             </Button>
@@ -237,40 +229,28 @@ export default function Dashboard() {
             >
               Open Action Plans
             </Button>
-          </div>
+          </>
+        }
+      >
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {stats.map((stat) => (
+            <StatCard
+              key={stat.label}
+              label={stat.label}
+              value={loading ? "..." : stat.value}
+              icon={stat.icon}
+            />
+          ))}
         </div>
-      </section>
-
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {stats.map((stat) => (
-          <div key={stat.label} className="metric-card">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-slate-500">{stat.label}</p>
-                <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">
-                  {loading ? "..." : stat.value}
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-slate-100 p-2.5">
-                <stat.icon className="h-5 w-5 text-slate-700" />
-              </div>
-            </div>
-          </div>
-        ))}
-      </section>
+      </PageHeader>
 
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="surface-card p-6">
-          <div className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-slate-600" />
-            <h3 className="text-xl font-semibold tracking-tight text-slate-900">
-              Case portfolio
-            </h3>
-          </div>
-          <p className="mt-1 text-sm text-slate-500">
-            Visual distribution of case progression.
-          </p>
+        <SectionCard>
+          <SectionHeader
+            eyebrow="Portfolio"
+            title="Case portfolio"
+            description="A simple progression view so you can see the balance between draft, active, and completed work."
+          />
 
           <div className="mt-6 space-y-5">
             {[
@@ -294,18 +274,14 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
-        </div>
+        </SectionCard>
 
-        <div className="surface-card p-6">
-          <div className="flex items-center gap-2">
-            <Target className="h-5 w-5 text-slate-600" />
-            <h3 className="text-xl font-semibold tracking-tight text-slate-900">
-              Execution pressure
-            </h3>
-          </div>
-          <p className="mt-1 text-sm text-slate-500">
-            Action urgency and follow-up picture.
-          </p>
+        <SectionCard>
+          <SectionHeader
+            eyebrow="Execution"
+            title="Execution pressure"
+            description="A quick summary of current action urgency and where follow-up attention is needed."
+          />
 
           <div className="mt-6 space-y-4">
             <div className="rounded-2xl bg-slate-50 p-4">
@@ -329,17 +305,16 @@ export default function Dashboard() {
               </p>
             </div>
           </div>
-        </div>
+        </SectionCard>
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-        <div className="surface-card p-6">
-          <h3 className="text-xl font-semibold tracking-tight text-slate-900">
-            Sector mix
-          </h3>
-          <p className="mt-1 text-sm text-slate-500">
-            Where your current cases are concentrated.
-          </p>
+        <SectionCard>
+          <SectionHeader
+            eyebrow="Coverage"
+            title="Sector mix"
+            description="Where your current cases are concentrated so you can quickly see portfolio spread."
+          />
 
           <div className="mt-6 space-y-4">
             {[
@@ -367,15 +342,14 @@ export default function Dashboard() {
               );
             })}
           </div>
-        </div>
+        </SectionCard>
 
-        <div className="surface-card p-6">
-          <h3 className="text-xl font-semibold tracking-tight text-slate-900">
-            Continue where you left off
-          </h3>
-          <p className="mt-1 text-sm text-slate-500">
-            Your most recent work and next useful entry points.
-          </p>
+        <SectionCard>
+          <SectionHeader
+            eyebrow="Resume"
+            title="Continue where you left off"
+            description="Your most useful re-entry points based on recent work and execution urgency."
+          />
 
           <div className="mt-6 grid gap-4">
             {mostRecentCase ? (
@@ -392,7 +366,7 @@ export default function Dashboard() {
                       {mostRecentCase.title || "Untitled case"}
                     </p>
                     <p className="text-sm text-slate-500">
-                      {mostRecentCase.problem_type || "Case"} • Stage {mostRecentCase.current_stage || 1}/12
+                      {mostRecentCase.problem_type || "Case"} | Stage {mostRecentCase.current_stage || 1}/12
                     </p>
                   </div>
                 </div>
@@ -439,20 +413,15 @@ export default function Dashboard() {
               </div>
             </button>
           </div>
-        </div>
+        </SectionCard>
       </section>
 
-      <section className="surface-card p-6">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h3 className="text-xl font-semibold tracking-tight text-slate-900">
-              Quick actions
-            </h3>
-            <p className="mt-1 text-sm text-slate-500">
-              The fastest ways to move inside LeanOps.
-            </p>
-          </div>
-        </div>
+      <SectionCard>
+        <SectionHeader
+          eyebrow="Navigation"
+          title="Quick actions"
+          description="The fastest ways to move through LeanOps based on the most common workflow entry points."
+        />
 
         <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {quickActions.map((action) => (
@@ -475,16 +444,15 @@ export default function Dashboard() {
             </button>
           ))}
         </div>
-      </section>
+      </SectionCard>
 
       <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-        <div className="surface-card p-6">
-          <h3 className="text-xl font-semibold tracking-tight text-slate-900">
-            Recent action activity
-          </h3>
-          <p className="mt-1 text-sm text-slate-500">
-            Recently updated execution items.
-          </p>
+        <SectionCard>
+          <SectionHeader
+            eyebrow="Activity"
+            title="Recent action activity"
+            description="The latest execution updates so you can spot movement and blockers quickly."
+          />
 
           <div className="mt-6 space-y-3">
             {recentActions.length === 0 ? (
@@ -499,11 +467,11 @@ export default function Dashboard() {
                   className="interactive-card flex w-full items-center justify-between p-4 text-left"
                 >
                   <div className="min-w-0">
-                    <p className="font-medium text-slate-900 line-clamp-1">
+                    <p className="line-clamp-1 font-medium text-slate-900">
                       {action.title}
                     </p>
                     <p className="mt-1 text-sm text-slate-500">
-                      {action.status} • {action.owner || "No owner"}
+                      {action.status} | {action.owner || "No owner"}
                     </p>
                   </div>
                   {isOverdue(action.deadline, action.status) ? (
@@ -515,15 +483,14 @@ export default function Dashboard() {
               ))
             )}
           </div>
-        </div>
+        </SectionCard>
 
-        <div className="surface-card p-6">
-          <h3 className="text-xl font-semibold tracking-tight text-slate-900">
-            Announcements
-          </h3>
-          <p className="mt-1 text-sm text-slate-500">
-            Product updates and useful guidance.
-          </p>
+        <SectionCard>
+          <SectionHeader
+            eyebrow="Updates"
+            title="Announcements"
+            description="Product updates and useful guidance grouped into a simple communication panel."
+          />
 
           <div className="mt-6 space-y-4">
             {announcements.length === 0 ? (
@@ -537,15 +504,13 @@ export default function Dashboard() {
                   className="rounded-2xl border border-slate-200 bg-slate-50 p-5"
                 >
                   <h4 className="font-medium text-slate-900">{item.title}</h4>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-  {item.content}
-</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{item.content}</p>
                 </div>
               ))
             )}
           </div>
-        </div>
+        </SectionCard>
       </section>
-    </div>
+    </PageShell>
   );
 }

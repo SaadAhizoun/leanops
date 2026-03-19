@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
+import { Bell, LockKeyhole, Palette, Settings2 } from "lucide-react";
+
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { PageHeader, SectionCard, SectionHeader } from "@/components/ui/page";
+import { Switch } from "@/components/ui/switch";
 
 export default function Settings() {
   const { toast } = useToast();
@@ -14,12 +16,10 @@ export default function Settings() {
     activity: true,
     announcements: true,
   });
-
   const [preferences, setPreferences] = useState({
     language: "English",
     theme: "System",
   });
-
   const [passwordForm, setPasswordForm] = useState({
     current: "",
     next: "",
@@ -27,17 +27,11 @@ export default function Settings() {
   });
 
   const savePreferences = () => {
-    toast({
-      title: "Preferences saved",
-      description: "Your local settings have been updated.",
-    });
+    toast({ title: "Preferences saved", description: "Your local settings have been updated." });
   };
 
   const saveNotifications = () => {
-    toast({
-      title: "Notification settings saved",
-      description: "Your notification preferences have been updated.",
-    });
+    toast({ title: "Notification settings saved", description: "Your notification preferences have been updated." });
   };
 
   const updatePassword = () => {
@@ -60,157 +54,167 @@ export default function Settings() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-3xl border border-slate-200 bg-white px-6 py-7 shadow-sm md:px-8">
-        <p className="text-sm font-medium text-slate-500">Settings</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
-          Preferences and account controls
-        </h1>
-        <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-          Manage your local experience, notification behavior, and account-related options.
-        </p>
-      </section>
+      <PageHeader
+        eyebrow="Settings"
+        title="Preferences and account controls"
+        description="Manage your workspace experience, notification behavior, and account-related options with a cleaner settings layout."
+      />
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <Card className="rounded-2xl border-slate-200 shadow-sm">
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold tracking-tight text-slate-900">
-              Notification preferences
-            </h3>
-
-            <div className="mt-5 space-y-4">
-              <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <div>
-                  <p className="font-medium text-slate-900">Draft reminders</p>
-                  <p className="text-sm text-slate-500">
-                    Remind me about inactive drafts and follow-up.
-                  </p>
-                </div>
-                <Switch
-                  checked={notifications.reminders}
-                  onCheckedChange={(checked) =>
-                    setNotifications((prev) => ({ ...prev, reminders: checked }))
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <div>
-                  <p className="font-medium text-slate-900">Activity signals</p>
-                  <p className="text-sm text-slate-500">
-                    Show case and project activity updates.
-                  </p>
-                </div>
-                <Switch
-                  checked={notifications.activity}
-                  onCheckedChange={(checked) =>
-                    setNotifications((prev) => ({ ...prev, activity: checked }))
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <div>
-                  <p className="font-medium text-slate-900">Announcements</p>
-                  <p className="text-sm text-slate-500">
-                    Show product guidance and platform notices.
-                  </p>
-                </div>
-                <Switch
-                  checked={notifications.announcements}
-                  onCheckedChange={(checked) =>
-                    setNotifications((prev) => ({ ...prev, announcements: checked }))
-                  }
-                />
+      <div className="settings-grid">
+        <aside className="settings-nav h-fit">
+          <div className="space-y-1">
+            <div className="settings-nav-item settings-nav-item-active">
+              <Bell className="mt-0.5 h-4 w-4" />
+              <div>
+                <p className="text-sm font-semibold">Notifications</p>
+                <p className="mt-1 text-xs text-slate-500">Reminders, activity, announcements</p>
               </div>
             </div>
-
-            <Button className="mt-5 rounded-xl" onClick={saveNotifications}>
-              Save notification settings
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl border-slate-200 shadow-sm">
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold tracking-tight text-slate-900">
-              Workspace preferences
-            </h3>
-
-            <div className="mt-5 grid gap-4">
-              <div className="space-y-2">
-                <Label>Language</Label>
-                <Input
-                  value={preferences.language}
-                  onChange={(e) =>
-                    setPreferences((prev) => ({ ...prev, language: e.target.value }))
-                  }
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Theme</Label>
-                <Input
-                  value={preferences.theme}
-                  onChange={(e) =>
-                    setPreferences((prev) => ({ ...prev, theme: e.target.value }))
-                  }
-                />
+            <div className="settings-nav-item settings-nav-item-idle">
+              <Palette className="mt-0.5 h-4 w-4" />
+              <div>
+                <p className="text-sm font-semibold">Workspace</p>
+                <p className="mt-1 text-xs text-slate-500">Language and visual preferences</p>
               </div>
             </div>
-
-            <Button className="mt-5 rounded-xl" onClick={savePreferences}>
-              Save preferences
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="rounded-2xl border-slate-200 shadow-sm">
-        <CardContent className="p-6">
-          <h3 className="text-lg font-semibold tracking-tight text-slate-900">
-            Password and account flow
-          </h3>
-
-          <div className="mt-5 grid gap-4 md:grid-cols-3">
-            <div className="space-y-2">
-              <Label>Current password</Label>
-              <Input
-                type="password"
-                value={passwordForm.current}
-                onChange={(e) =>
-                  setPasswordForm((prev) => ({ ...prev, current: e.target.value }))
-                }
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>New password</Label>
-              <Input
-                type="password"
-                value={passwordForm.next}
-                onChange={(e) =>
-                  setPasswordForm((prev) => ({ ...prev, next: e.target.value }))
-                }
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Confirm password</Label>
-              <Input
-                type="password"
-                value={passwordForm.confirm}
-                onChange={(e) =>
-                  setPasswordForm((prev) => ({ ...prev, confirm: e.target.value }))
-                }
-              />
+            <div className="settings-nav-item settings-nav-item-idle">
+              <LockKeyhole className="mt-0.5 h-4 w-4" />
+              <div>
+                <p className="text-sm font-semibold">Account Security</p>
+                <p className="mt-1 text-xs text-slate-500">Password and sign-in controls</p>
+              </div>
             </div>
           </div>
+        </aside>
 
-          <Button className="mt-5 rounded-xl" onClick={updatePassword}>
-            Update password
-          </Button>
-        </CardContent>
-      </Card>
+        <div className="space-y-6">
+          <SectionCard as="div">
+            <SectionHeader
+              eyebrow="Notifications"
+              title="Notification preferences"
+              description="Control the operational signals that deserve your attention."
+            />
+
+            <div className="mt-6 space-y-4">
+              {[
+                {
+                  key: "reminders" as const,
+                  title: "Draft reminders",
+                  description: "Remind me about inactive drafts and follow-up.",
+                },
+                {
+                  key: "activity" as const,
+                  title: "Activity signals",
+                  description: "Show case and project activity updates.",
+                },
+                {
+                  key: "announcements" as const,
+                  title: "Announcements",
+                  description: "Show product guidance and platform notices.",
+                },
+              ].map((item) => (
+                <div key={item.key} className="surface-muted flex items-center justify-between gap-4 p-4">
+                  <div>
+                    <p className="font-semibold text-slate-950">{item.title}</p>
+                    <p className="mt-1 text-sm text-slate-500">{item.description}</p>
+                  </div>
+                  <Switch
+                    checked={notifications[item.key]}
+                    onCheckedChange={(checked) => setNotifications((prev) => ({ ...prev, [item.key]: checked }))}
+                  />
+                </div>
+              ))}
+            </div>
+
+            <Button className="mt-6" onClick={saveNotifications}>
+              Save notification settings
+            </Button>
+          </SectionCard>
+
+          <SectionCard as="div">
+            <SectionHeader
+              eyebrow="Workspace"
+              title="Workspace preferences"
+              description="Tune the local experience and keep the workspace aligned with your team."
+            />
+
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="language">Language</Label>
+                <Input
+                  id="language"
+                  value={preferences.language}
+                  onChange={(e) => setPreferences((prev) => ({ ...prev, language: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="theme">Theme</Label>
+                <Input
+                  id="theme"
+                  value={preferences.theme}
+                  onChange={(e) => setPreferences((prev) => ({ ...prev, theme: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
+              <div className="flex items-center gap-2 text-slate-900">
+                <Settings2 className="h-4 w-4" />
+                <p className="text-sm font-semibold">Preference note</p>
+              </div>
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                These settings are currently stored locally, but the layout is ready for profile-backed persistence later.
+              </p>
+            </div>
+
+            <Button className="mt-6" onClick={savePreferences}>
+              Save preferences
+            </Button>
+          </SectionCard>
+
+          <SectionCard as="div">
+            <SectionHeader
+              eyebrow="Security"
+              title="Password and account flow"
+              description="A stronger alignment pattern for account security actions."
+            />
+
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label htmlFor="current-password">Current password</Label>
+                <Input
+                  id="current-password"
+                  type="password"
+                  value={passwordForm.current}
+                  onChange={(e) => setPasswordForm((prev) => ({ ...prev, current: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-password">New password</Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  value={passwordForm.next}
+                  onChange={(e) => setPasswordForm((prev) => ({ ...prev, next: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password">Confirm password</Label>
+                <Input
+                  id="confirm-password"
+                  type="password"
+                  value={passwordForm.confirm}
+                  onChange={(e) => setPasswordForm((prev) => ({ ...prev, confirm: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <Button className="mt-6" onClick={updatePassword}>
+              Update password
+            </Button>
+          </SectionCard>
+        </div>
+      </div>
     </div>
   );
 }

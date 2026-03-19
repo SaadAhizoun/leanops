@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import AuthShell from "@/components/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import logo from "@/assets/logo-leanops.png";
 
 export default function Signup() {
   const [email, setEmail] = useState("");
@@ -30,33 +29,36 @@ export default function Signup() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-muted/30">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <Link to="/"><img src={logo} alt="LeanOps" className="h-10 mx-auto mb-4" /></Link>
-          <CardTitle>Create your account</CardTitle>
-          <CardDescription>Start your operational excellence journey</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSignup} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input id="name" value={fullName} onChange={e => setFullName(e.target.value)} required placeholder="Saad AHIZOUN" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="you@example.com" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>{loading ? "Creating account..." : "Create Account"}</Button>
-          </form>
-          <p className="text-sm text-center mt-4">Already have an account? <Link to="/auth/login" className="text-primary hover:underline">Sign in</Link></p>
-          <p className="text-xs text-muted-foreground text-center mt-6">Built by Saad AHIZOUN</p>
-        </CardContent>
-      </Card>
-    </div>
+    <AuthShell
+      title="Create your account"
+      description="Start your operational excellence journey with a cleaner, more guided workspace."
+      footer={
+        <>
+          Already have an account?{" "}
+          <Link to="/auth/login" className="font-semibold text-primary hover:underline">
+            Sign in
+          </Link>
+        </>
+      }
+    >
+      <form onSubmit={handleSignup} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="name">Full Name</Label>
+          <Input id="name" value={fullName} onChange={(e) => setFullName(e.target.value)} required placeholder="Saad AHIZOUN" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@example.com" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+        </div>
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? "Creating account..." : "Create Account"}
+        </Button>
+      </form>
+      <p className="mt-4 text-center text-xs text-slate-500">Built by Saad AHIZOUN</p>
+    </AuthShell>
   );
 }

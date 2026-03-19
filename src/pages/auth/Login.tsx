@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import AuthShell from "@/components/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import logo from "@/assets/logo-leanops.png";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -37,35 +36,43 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-muted/30">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <Link to="/"><img src={logo} alt="LeanOps" className="h-10 mx-auto mb-4" /></Link>
-          <CardTitle>Welcome back</CardTitle>
-          <CardDescription>Sign in to your LeanOps account</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="you@example.com" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>{loading ? "Signing in..." : "Sign In"}</Button>
-          </form>
-          <div className="mt-4 space-y-3">
-            <Button variant="outline" className="w-full" onClick={handleMagicLink} disabled={loading}>Send Magic Link</Button>
-            <div className="flex justify-between text-sm">
-              <Link to="/auth/forgot-password" className="text-primary hover:underline">Forgot password?</Link>
-              <Link to="/auth/signup" className="text-primary hover:underline">Create account</Link>
-            </div>
+    <AuthShell
+      title="Welcome back"
+      description="Sign in to your LeanOps account to continue operational improvement work."
+      footer={
+        <>
+          New to LeanOps?{" "}
+          <Link to="/auth/signup" className="font-semibold text-primary hover:underline">
+            Create your account
+          </Link>
+        </>
+      }
+    >
+      <form onSubmit={handleLogin} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@example.com" />
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password">Password</Label>
+            <Link to="/auth/forgot-password" className="text-xs font-semibold text-primary hover:underline">
+              Forgot password?
+            </Link>
           </div>
-          <p className="text-xs text-muted-foreground text-center mt-6">Built by Saad AHIZOUN</p>
-        </CardContent>
-      </Card>
-    </div>
+          <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        </div>
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? "Signing in..." : "Sign In"}
+        </Button>
+      </form>
+
+      <div className="mt-4 space-y-3">
+        <Button variant="outline" className="w-full" onClick={handleMagicLink} disabled={loading}>
+          Send Magic Link
+        </Button>
+        <p className="text-center text-xs text-slate-500">Built by Saad AHIZOUN</p>
+      </div>
+    </AuthShell>
   );
 }

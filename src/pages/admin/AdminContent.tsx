@@ -1,14 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
+import { BookOpen, FileText, Megaphone, Search, Wrench } from "lucide-react";
+
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Search, BookOpen, Wrench, Megaphone, FileText } from "lucide-react";
+import {
+  ChipToggle,
+  EmptyState,
+  FilterBar,
+  LoadingState,
+  PageHeader,
+  PageShell,
+  StatsGrid,
+  StatCard,
+} from "@/components/ui/page";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 type ContentRow = {
   id: string;
   title?: string | null;
-  name?: string | null;
   updated_at?: string | null;
 };
 
@@ -69,17 +79,14 @@ export default function AdminContent() {
     }));
 
     return [...topicItems, ...toolkitItems, ...announcementItems].sort(
-      (a, b) =>
-        new Date(b.updated_at || "").getTime() -
-        new Date(a.updated_at || "").getTime()
+      (a, b) => new Date(b.updated_at || "").getTime() - new Date(a.updated_at || "").getTime(),
     );
   }, [topics, toolkits, announcements]);
 
   const filteredItems = useMemo(() => {
     return contentItems.filter((item) => {
       const matchesSearch = item.title.toLowerCase().includes(search.toLowerCase());
-      const matchesFilter = filter === "all" || item.type === filter;
-      return matchesSearch && matchesFilter;
+      return matchesSearch && (filter === "all" || item.type === filter);
     });
   }, [contentItems, search, filter]);
 
@@ -96,115 +103,80 @@ export default function AdminContent() {
   };
 
   return (
-    <div className="space-y-8">
-      <section className="rounded-3xl border border-slate-200 bg-white px-6 py-7 shadow-sm md:px-8">
-        <p className="text-sm font-medium text-slate-500">Admin Content</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
-          Content management center
-        </h1>
-        <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-          Review and manage published knowledge topics, toolkits, and announcements across LeanOps.
-        </p>
+    <PageShell>
+      <PageHeader
+        eyebrow="Admin Content"
+        title="Content management center"
+        description="Review and manage published knowledge topics, toolkits, and announcements across LeanOps."
+      >
+        <StatsGrid>
+          <StatCard label="Topics" value={topics.length} icon={BookOpen} />
+          <StatCard label="Toolkits" value={toolkits.length} icon={Wrench} />
+          <StatCard label="Announcements" value={announcements.length} icon={Megaphone} />
+          <StatCard label="Total items" value={contentItems.length} icon={FileText} />
+        </StatsGrid>
+      </PageHeader>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-            <p className="text-xs uppercase tracking-wide text-slate-500">Topics</p>
-            <p className="mt-2 text-2xl font-semibold text-slate-900">{topics.length}</p>
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-            <p className="text-xs uppercase tracking-wide text-slate-500">Toolkits</p>
-            <p className="mt-2 text-2xl font-semibold text-slate-900">{toolkits.length}</p>
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-            <p className="text-xs uppercase tracking-wide text-slate-500">Announcements</p>
-            <p className="mt-2 text-2xl font-semibold text-slate-900">{announcements.length}</p>
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-            <p className="text-xs uppercase tracking-wide text-slate-500">Total items</p>
-            <p className="mt-2 text-2xl font-semibold text-slate-900">{contentItems.length}</p>
-          </div>
+      <FilterBar>
+        <div className="relative w-full max-w-md">
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Input
+            placeholder="Search content..."
+            className="pl-11"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
-      </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="relative w-full max-w-md">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <Input
-              placeholder="Search content..."
-              className="pl-9"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {[
-              { value: "all", label: "All" },
-              { value: "topic", label: "Topics" },
-              { value: "toolkit", label: "Toolkits" },
-              { value: "announcement", label: "Announcements" },
-            ].map((item) => (
-              <button
-                key={item.value}
-                onClick={() => setFilter(item.value as typeof filter)}
-                className={`rounded-xl border px-3 py-2 text-sm transition ${
-                  filter === item.value
-                    ? "border-slate-900 bg-slate-900 text-white"
-                    : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
+        <div className="chip-toggle-group">
+          {[
+            { value: "all", label: "All" },
+            { value: "topic", label: "Topics" },
+            { value: "toolkit", label: "Toolkits" },
+            { value: "announcement", label: "Announcements" },
+          ].map((item) => (
+            <ChipToggle
+              key={item.value}
+              active={filter === item.value}
+              onClick={() => setFilter(item.value as typeof filter)}
+            >
+              {item.label}
+            </ChipToggle>
+          ))}
         </div>
-      </section>
+      </FilterBar>
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        </div>
+        <LoadingState />
       ) : filteredItems.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
-          <FileText className="mx-auto mb-4 h-10 w-10 text-slate-300" />
-          <p className="text-base font-medium text-slate-900">No content found</p>
-          <p className="mt-2 text-sm text-slate-500">
-            Try another search term or filter.
-          </p>
-        </div>
+        <EmptyState icon={FileText} title="No content found" description="Try another search term or filter." />
       ) : (
-        <div className="space-y-4">
+        <div className="section-stack">
           {filteredItems.map((item) => {
             const Icon = getIcon(item.type);
 
             return (
-              <Card key={`${item.type}-${item.id}`} className="rounded-2xl border-slate-200 shadow-sm">
-                <CardContent className="p-5">
+              <Card key={`${item.type}-${item.id}`}>
+                <CardContent className="p-5 md:p-6">
                   <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div className="flex min-w-0 items-start gap-4">
-                      <div className="rounded-xl bg-slate-100 p-2.5">
+                      <div className="icon-tile">
                         <Icon className="h-5 w-5 text-slate-700" />
                       </div>
 
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="font-semibold text-slate-900">
-                            {item.title}
-                          </h3>
-                          <Badge variant="secondary">{getLabel(item.type)}</Badge>
+                          <h3 className="font-semibold text-slate-950">{item.title}</h3>
+                          <StatusBadge value="active">{getLabel(item.type)}</StatusBadge>
                         </div>
 
                         <p className="mt-2 text-sm text-slate-500">
-                          Updated:{" "}
-                          {item.updated_at
-                            ? new Date(item.updated_at).toLocaleDateString()
-                            : "—"}
+                          Updated {item.updated_at ? new Date(item.updated_at).toLocaleDateString() : "-"}
                         </p>
                       </div>
                     </div>
 
-                    <div className="text-sm text-slate-400">Managed content</div>
+                    <div className="text-sm font-medium text-slate-400">Managed content</div>
                   </div>
                 </CardContent>
               </Card>
@@ -212,6 +184,6 @@ export default function AdminContent() {
           })}
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

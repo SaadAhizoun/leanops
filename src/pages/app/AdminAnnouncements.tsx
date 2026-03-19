@@ -1,11 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
+import { Search, Megaphone, Save, Trash2, Plus } from "lucide-react";
+
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Search, Megaphone, Save, Trash2, Plus } from "lucide-react";
+import {
+  EmptyState,
+  FilterBar,
+  LoadingState,
+  PageHeader,
+  PageShell,
+  SectionCard,
+  SectionHeader,
+} from "@/components/ui/page";
 import { useToast } from "@/hooks/use-toast";
 
 type Announcement = {
@@ -144,17 +154,15 @@ export default function AdminAnnouncements() {
   };
 
   return (
-    <div className="space-y-8">
-      <section className="rounded-3xl border border-slate-200 bg-white px-6 py-7 shadow-sm md:px-8">
-        <p className="text-sm font-medium text-slate-500">Admin Announcements</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
-          Announcement management
-        </h1>
-        <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-          Create, update, activate, and remove platform announcements shown across LeanOps.
-        </p>
+    <PageShell>
+      <PageHeader
+        eyebrow="Admin Announcements"
+        title="Announcement management"
+        description="Create, update, activate, and remove platform announcements shown across LeanOps."
+      />
 
-        <div className="relative mt-6 max-w-md">
+      <FilterBar>
+        <div className="relative w-full max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
             placeholder="Search announcements..."
@@ -163,17 +171,20 @@ export default function AdminAnnouncements() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-      </section>
 
-      <Card className="rounded-2xl border-slate-200 shadow-sm">
-        <CardContent className="space-y-4 p-6">
-          <div className="flex items-center gap-2">
-            <Plus className="h-5 w-5 text-slate-600" />
-            <h2 className="text-xl font-semibold tracking-tight text-slate-900">
-              Create announcement
-            </h2>
-          </div>
+        <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-600">
+          {filtered.length} visible
+        </span>
+      </FilterBar>
 
+      <SectionCard>
+        <SectionHeader
+          eyebrow="Create"
+          title="New announcement"
+          description="Use the shared input layout below to add a new platform-wide communication item."
+        />
+
+        <div className="mt-5 space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-900">Title</label>
             <Input
@@ -193,7 +204,7 @@ export default function AdminAnnouncements() {
             />
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <Button
               variant={newItem.active ? "default" : "outline"}
               onClick={() => setNewItem((prev) => ({ ...prev, active: !prev.active }))}
@@ -202,24 +213,29 @@ export default function AdminAnnouncements() {
             </Button>
 
             <Button onClick={() => void createAnnouncement()}>
-              <Save className="mr-2 h-4 w-4" />
+              <Plus className="mr-2 h-4 w-4" />
               Create
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </SectionCard>
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        </div>
+        <LoadingState />
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
-          <Megaphone className="mx-auto mb-4 h-10 w-10 text-slate-300" />
-          <p className="text-base font-medium text-slate-900">No announcements found</p>
-        </div>
+        <EmptyState
+          icon={Megaphone}
+          title="No announcements found"
+          description="Create your first announcement or adjust the search to reveal existing communication items."
+        />
       ) : (
         <div className="space-y-4">
+          <SectionHeader
+            eyebrow="Library"
+            title="Published and draft announcements"
+            description="Each item is grouped into a cleaner editor card so review and updates are easier to scan."
+          />
+
           {filtered.map((item) => (
             <Card key={item.id} className="rounded-2xl border-slate-200 shadow-sm">
               <CardContent className="space-y-4 p-5">
@@ -297,6 +313,6 @@ export default function AdminAnnouncements() {
           ))}
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

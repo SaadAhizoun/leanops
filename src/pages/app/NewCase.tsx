@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { ArrowRight, Eye, Lightbulb, Wrench } from "lucide-react";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,9 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { ArrowRight, Lightbulb, Wrench, Eye } from "lucide-react";
+import { PageHeader, SectionCard, SectionHeader } from "@/components/ui/page";
 
 type ProjectOption = {
   id: string;
@@ -137,7 +138,6 @@ export default function NewCase() {
   const [projects, setProjects] = useState<ProjectOption[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [loading, setLoading] = useState(false);
-
   const [form, setForm] = useState({
     title: "",
     problem_type: initialType,
@@ -159,14 +159,9 @@ export default function NewCase() {
   useEffect(() => {
     async function loadProjects() {
       if (!user) return;
+
       setLoadingProjects(true);
-
-      const { data } = await supabase
-        .from("projects")
-        .select("id, title")
-        .eq("user_id", user.id)
-        .order("title");
-
+      const { data } = await supabase.from("projects").select("id, title").eq("user_id", user.id).order("title");
       setProjects((data as ProjectOption[]) || []);
       setLoadingProjects(false);
     }
@@ -174,29 +169,22 @@ export default function NewCase() {
     loadProjects();
   }, [user]);
 
-  const selectedGuide = useMemo(() => {
-    return problemGuides.find(
-      (g) => g.type.toLowerCase() === form.problem_type.toLowerCase()
-    );
-  }, [form.problem_type]);
+  const selectedGuide = useMemo(
+    () => problemGuides.find((guide) => guide.type.toLowerCase() === form.problem_type.toLowerCase()),
+    [form.problem_type],
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
     if (!form.title.trim()) {
-      toast({
-        title: "Case title is required",
-        variant: "destructive",
-      });
+      toast({ title: "Case title is required", variant: "destructive" });
       return;
     }
 
     if (!form.problem_type) {
-      toast({
-        title: "Problem type is required",
-        variant: "destructive",
-      });
+      toast({ title: "Problem type is required", variant: "destructive" });
       return;
     }
 
@@ -218,299 +206,239 @@ export default function NewCase() {
       stage_data: {},
     };
 
-    const { data, error } = await supabase
-      .from("cases")
-      .insert(payload as never)
-      .select()
-      .single();
-
+    const { data, error } = await supabase.from("cases").insert(payload as never).select().single();
     setLoading(false);
 
     if (error) {
-      toast({
-        title: "Error creating case",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Error creating case", description: error.message, variant: "destructive" });
       return;
     }
 
-    toast({
-      title: "Case created",
-      description: "Your new problem-solving case is ready.",
-    });
-
+    toast({ title: "Case created", description: "Your new problem-solving case is ready." });
     navigate(`/app/problems/${data.id}`);
   };
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
-      <section className="rounded-3xl border border-slate-200 bg-white px-6 py-7 shadow-sm md:px-8">
-        <div className="max-w-3xl">
-          <p className="text-sm font-medium text-slate-500">New Case</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
-            Start a structured problem-solving case
-          </h1>
-          <p className="mt-3 text-base leading-7 text-slate-600">
-            Begin with the core information only. Once the case is created,
-            LeanOps will guide you step by step through clarification, analysis,
-            countermeasures, and follow-up.
-          </p>
-        </div>
-      </section>
+    <div className="mx-auto max-w-7xl space-y-8">
+      <PageHeader
+        eyebrow="New Case"
+        title="Start a structured problem-solving case"
+        description="Capture the key context first, then let LeanOps guide the team through clarification, analysis, countermeasures, and follow-up."
+      />
 
-      <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card className="rounded-2xl border-slate-200 shadow-sm">
-          <CardContent className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+        <SectionCard as="div">
+          <SectionHeader
+            eyebrow="Case Setup"
+            title="Core case information"
+            description="A cleaner form structure for the details that matter most at case creation."
+          />
+
+          <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="case-title">Case Title</Label>
+              <Input
+                id="case-title"
+                value={form.title}
+                onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
+                required
+                placeholder="Example: Repeated downtime on extrusion line 2"
+              />
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Case Title</Label>
-                <Input
-                  value={form.title}
-                  onChange={(e) =>
-                    setForm({ ...form, title: e.target.value })
-                  }
-                  required
-                  placeholder="Example: Repeated downtime on extrusion line 2"
-                />
-              </div>
-
-              <div className="grid gap-5 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Problem Type</Label>
-                  <Select
-                    value={form.problem_type}
-                    onValueChange={(v) =>
-                      setForm({ ...form, problem_type: v })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {problemTypes.map((t) => (
-                        <SelectItem key={t} value={t}>
-                          {t}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Sector</Label>
-                  <Select
-                    value={form.sector}
-                    onValueChange={(v) => setForm({ ...form, sector: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {sectors.map((s) => (
-                        <SelectItem key={s} value={s}>
-                          {s}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Project (optional)</Label>
-                <Select
-                  value={form.project_id}
-                  onValueChange={(v) => setForm({ ...form, project_id: v })}
-                >
+                <Label>Problem Type</Label>
+                <Select value={form.problem_type} onValueChange={(value) => setForm((prev) => ({ ...prev, problem_type: value }))}>
                   <SelectTrigger>
-                    <SelectValue
-                      placeholder={
-                        loadingProjects ? "Loading projects..." : "Select a project"
-                      }
-                    />
+                    <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">No project</SelectItem>
-                    {projects.map((project) => (
-                      <SelectItem key={project.id} value={project.id}>
-                        {project.title}
+                    {problemTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              <div className="grid gap-5 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Site</Label>
-                  <Input
-                    value={form.site}
-                    onChange={(e) =>
-                      setForm({ ...form, site: e.target.value })
-                    }
-                    placeholder="Example: Plant A / Hospital B / Service Center"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Department / Area</Label>
-                  <Input
-                    value={form.department}
-                    onChange={(e) =>
-                      setForm({ ...form, department: e.target.value })
-                    }
-                    placeholder="Example: Extrusion / Emergency / Customer Support"
-                  />
-                </div>
-              </div>
-
               <div className="space-y-2">
-                <Label>Business Impact</Label>
-                <Textarea
-                  value={form.business_impact}
-                  onChange={(e) =>
-                    setForm({ ...form, business_impact: e.target.value })
-                  }
-                  placeholder="Describe the impact on cost, quality, delivery, safety, people, or customer experience..."
+                <Label>Sector</Label>
+                <Select value={form.sector} onValueChange={(value) => setForm((prev) => ({ ...prev, sector: value }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sectors.map((sector) => (
+                      <SelectItem key={sector} value={sector}>
+                        {sector}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Project</Label>
+              <Select value={form.project_id} onValueChange={(value) => setForm((prev) => ({ ...prev, project_id: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder={loadingProjects ? "Loading projects..." : "Select a project"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No project</SelectItem>
+                  {projects.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Site</Label>
+                <Input
+                  value={form.site}
+                  onChange={(e) => setForm((prev) => ({ ...prev, site: e.target.value }))}
+                  placeholder="Example: Plant A / Hospital B / Service Center"
                 />
               </div>
 
-              <div className="grid gap-5 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Impacted KPI</Label>
-                  <Input
-                    value={form.impacted_kpi}
-                    onChange={(e) =>
-                      setForm({ ...form, impacted_kpi: e.target.value })
-                    }
-                    placeholder="Example: OEE, lead time, defect rate, waiting time"
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label>Department / Area</Label>
+                <Input
+                  value={form.department}
+                  onChange={(e) => setForm((prev) => ({ ...prev, department: e.target.value }))}
+                  placeholder="Example: Extrusion / Emergency / Customer Support"
+                />
+              </div>
+            </div>
 
-                <div className="space-y-2">
-                  <Label>Priority</Label>
-                  <Select
-                    value={form.priority}
-                    onValueChange={(v) =>
-                      setForm({ ...form, priority: v })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="critical">Critical</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+            <div className="space-y-2">
+              <Label>Business Impact</Label>
+              <Textarea
+                value={form.business_impact}
+                onChange={(e) => setForm((prev) => ({ ...prev, business_impact: e.target.value }))}
+                placeholder="Describe the impact on cost, quality, delivery, safety, people, or customer experience..."
+              />
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Impacted KPI</Label>
+                <Input
+                  value={form.impacted_kpi}
+                  onChange={(e) => setForm((prev) => ({ ...prev, impacted_kpi: e.target.value }))}
+                  placeholder="Example: OEE, lead time, defect rate, waiting time"
+                />
               </div>
 
-              <Button
-                type="submit"
-                className="h-11 w-full rounded-xl"
-                disabled={loading}
-              >
-                {loading ? "Creating..." : "Create Case"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+              <div className="space-y-2">
+                <Label>Priority</Label>
+                <Select value={form.priority} onValueChange={(value) => setForm((prev) => ({ ...prev, priority: value }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="critical">Critical</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Creating..." : "Create Case"}
+            </Button>
+          </form>
+        </SectionCard>
 
         <div className="space-y-6">
-          <Card className="rounded-2xl border-slate-200 shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-2">
-                <Lightbulb className="h-5 w-5 text-slate-600" />
-                <h2 className="text-lg font-semibold tracking-tight text-slate-900">
-                  Guidance
-                </h2>
-              </div>
+          <SectionCard as="div">
+            <SectionHeader
+              eyebrow="Guidance"
+              title="Recommended tools and starting moves"
+              description="Choose a problem type to reveal more tailored guidance."
+            />
 
-              {selectedGuide ? (
-                <div className="mt-4 space-y-4">
-                  <p className="text-sm leading-6 text-slate-600">
-                    {selectedGuide.intro}
-                  </p>
-
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                      Recommended tools
-                    </p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {selectedGuide.tools.map((tool) => (
-                        <span
-                          key={tool}
-                          className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-600"
-                        >
-                          {tool}
-                        </span>
-                      ))}
+            {selectedGuide ? (
+              <div className="mt-5 space-y-5">
+                <div className="surface-muted p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white shadow-sm">
+                      <Lightbulb className="h-5 w-5 text-slate-700" />
                     </div>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                      How to start
-                    </p>
-                    <ul className="mt-2 space-y-2 text-sm leading-6 text-slate-600">
-                      {selectedGuide.howToStart.map((item) => (
-                        <li key={item} className="flex gap-2">
-                          <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-slate-400" />
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    <p className="text-sm leading-6 text-slate-600">{selectedGuide.intro}</p>
                   </div>
                 </div>
-              ) : (
-                <p className="mt-4 text-sm leading-6 text-slate-500">
-                  Select a problem type to see recommended tools and guidance
-                  before creating the case.
-                </p>
-              )}
-            </CardContent>
-          </Card>
 
-          <Card className="rounded-2xl border-slate-200 shadow-sm">
-            <CardContent className="p-6">
+                <div>
+                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-slate-500">Recommended tools</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {selectedGuide.tools.map((tool) => (
+                      <span key={tool} className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600">
+                        {tool}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-slate-500">How to start</p>
+                  <ul className="mt-3 space-y-3">
+                    {selectedGuide.howToStart.map((item) => (
+                      <li key={item} className="flex gap-3 text-sm leading-6 text-slate-600">
+                        <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-slate-400" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-5 surface-muted p-5 text-sm leading-6 text-slate-500">
+                Select a problem type to see recommended tools and setup guidance before creating the case.
+              </div>
+            )}
+          </SectionCard>
+
+          <SectionCard as="div">
+            <SectionHeader
+              eyebrow="Visual Aid"
+              title="Help the team picture the issue"
+              description="A more visual setup prompt so the first case discussion starts with clearer context."
+            />
+
+            {selectedGuide ? (
+              <div className="mt-5 surface-muted p-5">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white shadow-sm">
+                    <Eye className="h-5 w-5 text-slate-700" />
+                  </div>
+                  <p className="text-sm leading-6 text-slate-700">{selectedGuide.visualAid}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-5 surface-muted p-5 text-sm leading-6 text-slate-500">
+                Visual aids will appear here depending on the selected problem type.
+              </div>
+            )}
+
+            <div className="mt-5 rounded-[1.5rem] border border-dashed border-slate-300 p-5">
               <div className="flex items-center gap-2">
-                <Eye className="h-5 w-5 text-slate-600" />
-                <h2 className="text-lg font-semibold tracking-tight text-slate-900">
-                  Visual aid
-                </h2>
+                <Wrench className="h-4 w-4 text-slate-500" />
+                <p className="text-sm font-semibold text-slate-950">Practical flow</p>
               </div>
-
-              {selectedGuide ? (
-                <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm leading-6 text-slate-700">
-                    {selectedGuide.visualAid}
-                  </p>
-                </div>
-              ) : (
-                <p className="mt-4 text-sm leading-6 text-slate-500">
-                  Visual aids will appear here depending on the selected problem
-                  type.
-                </p>
-              )}
-
-              <div className="mt-4 rounded-2xl border border-dashed border-slate-200 p-4">
-                <div className="flex items-center gap-2">
-                  <Wrench className="h-4 w-4 text-slate-500" />
-                  <p className="text-sm font-medium text-slate-900">
-                    Practical flow
-                  </p>
-                </div>
-                <p className="mt-2 text-sm leading-6 text-slate-500">
-                  Create the case first, then use the stage guidance, toolkit
-                  links, and knowledge pages to structure the full analysis.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                Create the case first, then use stage guidance, toolkit links, and knowledge pages to structure the full analysis.
+              </p>
+            </div>
+          </SectionCard>
         </div>
       </div>
     </div>
