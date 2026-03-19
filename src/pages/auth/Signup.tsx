@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import AuthShell from "@/components/AuthShell";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,6 @@ export default function Signup() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -25,7 +24,7 @@ export default function Signup() {
     });
     setLoading(false);
     if (error) toast({ title: "Signup failed", description: error.message, variant: "destructive" });
-    else toast({ title: "Check your email", description: "We sent you a confirmation link. Please verify your email to continue." });
+    else toast({ title: "Welcome to LeanOps", description: "Your account has been created successfully. You can now continue to the app." });
   };
 
   return (
